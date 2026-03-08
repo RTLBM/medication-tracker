@@ -593,6 +593,16 @@
                         </div>
 
                         <div class="form-group">
+                            <label for="refCategory">Category *</label>
+                            <select id="refCategory" required>
+                                <option value="">-- Select Category --</option>
+                                <option value="regular">Regular Schedule (2x daily, etc.)</option>
+                                <option value="interval">Interval-Based (Every 6 hours, pain meds)</option>
+                                <option value="asneeded">As Needed (Antacid, inhaler, etc.)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
                             <label for="refPurpose">Purpose/Notes</label>
                             <input type="text" id="refPurpose" placeholder="e.g., Pain relief, Blood pressure">
                         </div>
@@ -604,7 +614,7 @@
                             </div>
                             <div class="form-group">
                                 <label for="refFrequency">Frequency</label>
-                                <input type="text" id="refFrequency" placeholder="e.g., 2x daily">
+                                <input type="text" id="refFrequency" placeholder="e.g., 2x daily, 6h, as needed">
                             </div>
                         </div>
 
@@ -691,6 +701,28 @@
         let references = JSON.parse(localStorage.getItem('medReferences')) || [];
         let currentDateFilter = 'all';
 
+        // Data migration: Add category field to existing references if missing
+        const migratedReferences = references.map(ref => {
+            if (!ref.category) {
+                // Assign category based on frequency if it looks like a pattern
+                const freq = (ref.frequency || '').toLowerCase();
+                if (freq.includes('as needed') || freq.includes('when needed') || freq.includes('as required')) {
+                    ref.category = 'asneeded';
+                } else if (freq.match(/(\d+)\s*h|every\s+(\d+)|q(\d+)/i)) {
+                    ref.category = 'interval';
+                } else {
+                    ref.category = 'regular'; // Default to regular
+                }
+            }
+            return ref;
+        });
+        references = migratedReferences;
+        
+        // Save migrated data back to localStorage
+        if (references.some(ref => !ref.category)) {
+            localStorage.setItem('medReferences', JSON.stringify(references));
+        }
+
         // Initialize
         updateMedicationList();
         updateStats();
@@ -744,6 +776,7 @@
             const ref = {
                 id: Date.now(),
                 name: document.getElementById('refMedName').value.trim(),
+                category: document.getElementById('refCategory').value,
                 purpose: document.getElementById('refPurpose').value.trim(),
                 dosage: document.getElementById('refDosage').value.trim(),
                 frequency: document.getElementById('refFrequency').value.trim()
@@ -852,15 +885,30 @@
             }
 
             empty.style.display = 'none';
-            list.innerHTML = references.map(ref => `
+            list.innerHTML = references.map(ref => {
+                let categoryBadgeColor = '#2563eb';
+                let categoryLabel = 'Regular';
+                
+                if (ref.category === 'interval') {
+                    categoryBadgeColor = '#f59e0b';
+                    categoryLabel = 'Interval';
+                } else if (ref.category === 'asneeded') {
+                    categoryBadgeColor = '#8b5cf6';
+                    categoryLabel = 'As Needed';
+                }
+                
+                return `
                 <div class="med-ref-card">
-                    <div class="med-ref-name">${escapeHtml(ref.name)}</div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <div class="med-ref-name">${escapeHtml(ref.name)}</div>
+                        <span style="background: ${categoryBadgeColor}; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; white-space: nowrap;">${categoryLabel}</span>
+                    </div>
                     ${ref.purpose ? `<div class="med-ref-item"><span class="med-ref-label">Purpose:</span> ${escapeHtml(ref.purpose)}</div>` : ''}
                     ${ref.dosage ? `<div class="med-ref-item"><span class="med-ref-label">Dosage:</span> ${escapeHtml(ref.dosage)}</div>` : ''}
                     ${ref.frequency ? `<div class="med-ref-item"><span class="med-ref-label">Frequency:</span> ${escapeHtml(ref.frequency)}</div>` : ''}
                     <button class="btn-delete" style="margin-top: 12px;" onclick="deleteReference(${ref.id})">Remove</button>
                 </div>
-            `).join('');
+            `}).join('');
         }
 
         function filterHistory() {
@@ -1036,6 +1084,14 @@
             const overdueReminders = [];
 
             references.forEach(ref => {
+                // Skip "as needed" medications - they don't have scheduled reminders
+                // Handle backward compatibility: if no category, treat as regular
+                const category = ref.category || 'regular';
+                
+                if (category === 'asneeded') {
+                    return;
+                }
+
                 const todayEntries = entries.filter(e => e.medication === ref.name && e.date === today);
                 const frequency = ref.frequency.toLowerCase();
 
