@@ -1144,24 +1144,45 @@
                         doseTimes = [9]; // 9 AM
                     }
 
-                    // Check how many doses have been taken today
+                    // Check how many doses have been taken today and their times
                     const dosesTaken = todayEntries.length;
 
-                    // Check if there's a pending dose
+                    // Only show reminder if there are pending doses
                     if (dosesTaken < expectedDoses) {
-                        // Find which dose slot we're in or coming up to
+                        // Find which dose window we're currently in or approaching
+                        let currentDoseIndex = -1;
+                        
+                        // Determine which dose slot the current time falls into or is approaching
                         for (let i = 0; i < doseTimes.length; i++) {
                             const doseTime = doseTimes[i];
-                            const doseWindow = doseTime - 3;
+                            const nextDoseTime = i + 1 < doseTimes.length ? doseTimes[i + 1] : 24 + doseTimes[0];
                             
-                            if (currentTime >= doseWindow && dosesTaken === i) {
-                                // Check if overdue (past the dose time)
-                                if (currentTime >= doseTime + 3) {
-                                    overdueReminders.push(ref);
-                                } else {
-                                    dueReminders.push(ref);
-                                }
+                            // If we're at or past this dose time, and before the next dose time
+                            if (currentTime >= doseTime && currentTime < nextDoseTime) {
+                                currentDoseIndex = i;
                                 break;
+                            }
+                        }
+                        
+                        // If we didn't find a match, we must be before the first dose
+                        if (currentDoseIndex === -1) {
+                            currentDoseIndex = 0;
+                        }
+                        
+                        // Check if the dose at currentDoseIndex has been taken
+                        const scheduledTime = doseTimes[currentDoseIndex];
+                        const doseWasTaken = todayEntries.some(entry => {
+                            const [entryHour, entryMin] = entry.time.split(':').map(Number);
+                            const entryTime = entryHour + entryMin / 60;
+                            return entryTime >= scheduledTime && entryTime < scheduledTime + 2;
+                        });
+                        
+                        // Only show reminder if this dose hasn't been taken yet
+                        if (!doseWasTaken) {
+                            if (currentTime >= scheduledTime) {
+                                overdueReminders.push(ref);
+                            } else if (currentTime >= scheduledTime - 1) {
+                                dueReminders.push(ref);
                             }
                         }
                     }
