@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medication Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2563eb;
+            --primary-light: #3b82f6;
+            --success: #10b981;
+            --success-light: #34d399;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg: #f8fafc;
+            --bg-card: #ffffff;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.07), 0 10px 13px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 0;
+            min-height: 100vh;
+            background: var(--bg);
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            padding: 24px 20px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin-bottom: 4px;
+        }
+
+        header p {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            padding: 0 16px;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+        }
+
+        .tab-btn {
+            flex: 1;
+            min-width: 140px;
+            padding: 16px 12px;
+            border: none;
+            background: none;
+            color: var(--text-light);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+            position: relative;
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-btn:hover {
+            color: var(--text);
+        }
+
+        .content {
+            padding: 0;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .section {
+            padding: 20px 16px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: inherit;
+            transition: all 0.2s ease;
+            background: var(--bg-card);
+            color: var(--text);
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-small {
+            width: auto;
+            padding: 8px 12px;
+            font-size: 13px;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .entry-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+            transition: all 0.3s ease;
+        }
+
+        .entry-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transform: translateY(-1px);
+        }
+
+        .entry-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .medication-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+
+        .entry-time {
+            font-size: 13px;
+            color: var(--text-light);
+        }
+
+        .dosage-badge {
+            background: var(--success-light);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .entry-date {
+            font-size: 12px;
+            color: var(--text-light);
+            margin-bottom: 8px;
+        }
+
+        .entry-notes {
+            font-size: 13px;
+            color: var(--text-light);
+            margin-top: 8px;
+            font-style: italic;
+            padding-top: 8px;
+            border-top: 1px solid var(--border);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-light);
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .empty-state p {
+            font-size: 14px;
+        }
+
+        .med-ref-card {
+            background: var(--bg-card);
+            border: 2px solid var(--primary);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+
+        .med-ref-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .med-ref-item {
+            font-size: 13px;
+            margin-bottom: 6px;
+            color: var(--text);
+        }
+
+        .med-ref-label {
+            font-weight: 600;
+            color: var(--text-light);
+            display: inline-block;
+            width: 70px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: var(--shadow);
+        }
+
+        .stat-number {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .entry-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            justify-content: flex-end;
+        }
+
+        .btn-delete {
+            background: var(--danger);
+            color: white;
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: none;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-delete:active {
+            transform: scale(0.95);
+        }
+
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .search-box {
+            margin-bottom: 16px;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            overflow-x: auto;
+        }
+
+        .filter-btn {
+            padding: 8px 14px;
+            border: 1px solid var(--border);
+            background: white;
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .filter-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                border-radius: 0;
+            }
+
+            header {
+                padding: 20px 16px;
+                border-radius: 0;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .timestamp {
+            display: block;
+            font-size: 11px;
+            color: var(--text-light);
+            margin-top: 4px;
+        }
+
+        .success-message {
+            background: var(--success);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            text-align: center;
+            animation: slideDown 0.3s ease;
+        }
+
+        .banner-container {
+            padding: 16px;
+            background: var(--bg);
+        }
+
+        .reminder-banner {
+            background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+            color: white;
+            padding: 16px;
+            border-radius: 10px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+            animation: slideDown 0.3s ease;
+        }
+
+        .reminder-banner.alert {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+
+        .reminder-banner.ready {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .reminder-banner h3 {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .reminder-items {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .reminder-item {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .reminder-item-name {
+            font-weight: 600;
+        }
+
+        .reminder-item-time {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>💊 Medication Tracker</h1>
+            <p>Simple, secure health tracking</p>
+        </header>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('log')">📝 Log</button>
+            <button class="tab-btn" onclick="switchTab('history')">📊 History</button>
+            <button class="tab-btn" onclick="switchTab('reference')">📋 Reference</button>
+            <button class="tab-btn" onclick="switchTab('settings')">⚙️ Settings</button>
+        </div>
+
+        <div class="content">
+            <!-- LOG TAB -->
+            <div id="log" class="tab-content active">
+                <div class="section">
+                    <div id="reminderBanner"></div>
+
+                    <div id="successMessage" class="success-message" style="display: none;">
+                        ✓ Medication logged successfully!
+                    </div>
+
+                    <form id="logForm" onsubmit="addEntry(event)">
+                        <div class="form-group">
+                            <label for="medName">Medication Name *</label>
+                            <input type="text" id="medName" list="medicationList" placeholder="e.g., Aspirin, Lisinopril" required>
+                            <datalist id="medicationList"></datalist>
+                        </div>
+
+                        <div class="two-column">
+                            <div class="form-group">
+                                <label for="logDate">Date *</label>
+                                <input type="date" id="logDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="logTime">Time *</label>
+                                <input type="time" id="logTime" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="dosage">Dosage *</label>
+                            <input type="text" id="dosage" placeholder="e.g., 500mg, 1 tablet, 2 capsules" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="notes">Notes</label>
+                            <textarea id="notes" placeholder="Any observations or side effects..."></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            <span>✓ Log Medication</span>
+                        </button>
+                    </form>
+
+                    <div style="margin-top: 20px; padding: 16px; background: #f0f9ff; border-radius: 8px; border-left: 4px solid var(--primary);">
+                        <p style="font-size: 13px; color: var(--text);">
+                            <strong>💡 Tip:</strong> Your data is saved locally on this device. It never leaves your phone.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HISTORY TAB -->
+            <div id="history" class="tab-content">
+                <div class="section">
+                    <div class="search-box">
+                        <input type="text" id="searchBox" placeholder="🔍 Search by medication name..." onkeyup="filterHistory()">
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-number" id="totalEntries">0</div>
+                            <div class="stat-label">Total Entries</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="todayEntries">0</div>
+                            <div class="stat-label">Today</div>
+                        </div>
+                    </div>
+
+                    <label style="margin-bottom: 12px; display: block;">Filter by:</label>
+                    <div class="filter-buttons">
+                        <button class="filter-btn active" onclick="filterByDate('all')">All Time</button>
+                        <button class="filter-btn" onclick="filterByDate('today')">Today</button>
+                        <button class="filter-btn" onclick="filterByDate('week')">Last 7 Days</button>
+                        <button class="filter-btn" onclick="filterByDate('month')">Last 30 Days</button>
+                    </div>
+
+                    <div id="historyList"></div>
+                </div>
+            </div>
+
+            <!-- REFERENCE TAB -->
+            <div id="reference" class="tab-content">
+                <div class="section">
+                    <form id="refForm" onsubmit="addReference(event)">
+                        <div class="form-group">
+                            <label for="refMedName">Medication Name *</label>
+                            <input type="text" id="refMedName" placeholder="e.g., Aspirin" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="refPurpose">Purpose/Notes</label>
+                            <input type="text" id="refPurpose" placeholder="e.g., Pain relief, Blood pressure">
+                        </div>
+
+                        <div class="two-column">
+                            <div class="form-group">
+                                <label for="refDosage">Typical Dosage</label>
+                                <input type="text" id="refDosage" placeholder="e.g., 500mg">
+                            </div>
+                            <div class="form-group">
+                                <label for="refFrequency">Frequency</label>
+                                <input type="text" id="refFrequency" placeholder="e.g., 2x daily">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">+ Add to Reference</button>
+                    </form>
+
+                    <div style="margin-top: 24px;">
+                        <h3 style="font-size: 16px; margin-bottom: 12px; color: var(--text);">Your Medications</h3>
+                        <div id="referenceList"></div>
+                        <div id="emptyReference" class="empty-state">
+                            <div class="empty-state-icon">📋</div>
+                            <p>No medications added yet. Add one above to get started!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SETTINGS TAB -->
+            <div id="settings" class="tab-content">
+                <div class="section">
+                    <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 20px; color: var(--text);">Settings & Data Management</h2>
+
+                    <div style="background: #f0f9ff; border-left: 4px solid var(--primary); padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+                        <h3 style="color: var(--primary); font-size: 14px; font-weight: 700; margin-bottom: 12px;">💾 Backup & Restore</h3>
+                        <p style="font-size: 13px; color: var(--text); line-height: 1.6; margin-bottom: 12px;">
+                            Export your data to Excel (with charts) or import previously saved data.
+                        </p>
+                        <button class="btn btn-primary" onclick="exportToExcel()" style="margin-bottom: 10px;">
+                            📊 Export to Excel
+                        </button>
+                        <p style="font-size: 12px; color: var(--text-light); margin-top: 8px; margin-bottom: 12px;">Downloads an Excel file with all your medication data and charts</p>
+
+                        <button class="btn btn-primary" onclick="document.getElementById('importFile').click()" style="margin-bottom: 10px;">
+                            📥 Import from File
+                        </button>
+                        <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importFromFile(event)">
+                        <p style="font-size: 12px; color: var(--text-light); margin-top: 8px;">Upload a previously exported JSON backup file</p>
+                    </div>
+
+                    <div style="background: #fef2f2; border-left: 4px solid var(--danger); padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+                        <h3 style="color: var(--danger); font-size: 14px; font-weight: 700; margin-bottom: 8px;">⚠️ Danger Zone</h3>
+                        <p style="font-size: 13px; color: var(--text-light); margin-bottom: 16px;">These actions cannot be undone. Please be careful!</p>
+
+                        <button class="btn btn-danger" onclick="clearAllEntries()" style="margin-bottom: 10px;">
+                            🗑️ Clear All Medication Entries
+                        </button>
+                        <p style="font-size: 12px; color: var(--text-light); margin-top: 8px;">Deletes all logged doses but keeps your medication reference</p>
+
+                        <button class="btn btn-danger" onclick="clearAllReferences()" style="margin-bottom: 10px; margin-top: 16px;">
+                            🗑️ Clear All Medications
+                        </button>
+                        <p style="font-size: 12px; color: var(--text-light); margin-top: 8px;">Deletes all reference medications from your list</p>
+
+                        <button class="btn btn-danger" onclick="clearAllData()" style="margin-top: 16px;">
+                            🗑️ Clear ALL Data (Factory Reset)
+                        </button>
+                        <p style="font-size: 12px; color: var(--text-light); margin-top: 8px;">Deletes everything. Starts the app fresh.</p>
+                    </div>
+
+                    <div style="background: #f0f9ff; border-left: 4px solid var(--primary); padding: 16px; border-radius: 8px;">
+                        <h3 style="color: var(--primary); font-size: 14px; font-weight: 700; margin-bottom: 12px;">📱 About This App</h3>
+                        <p style="font-size: 13px; color: var(--text); line-height: 1.6;">
+                            <strong>Medication Tracker</strong><br>
+                            A secure, private medication tracking app for your iPhone and Android.<br><br>
+                            ✓ All data stored locally on your device<br>
+                            ✓ No cloud sync, no account required<br>
+                            ✓ Works offline<br>
+                            ✓ Completely free<br>
+                            ✓ Export to Excel anytime<br><br>
+                            <em style="color: var(--text-light);">Your health data is private and belongs to you.</em>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize date input
+        document.getElementById('logDate').valueAsDate = new Date();
+
+        // Load data from localStorage
+        let entries = JSON.parse(localStorage.getItem('medEntries')) || [];
+        let references = JSON.parse(localStorage.getItem('medReferences')) || [];
+        let currentDateFilter = 'all';
+
+        // Initialize
+        updateMedicationList();
+        updateStats();
+        renderHistory();
+        renderReferences();
+        updateReminders();
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+
+            if (tabName === 'history') updateStats();
+            if (tabName === 'log') updateReminders();
+        }
+
+        function addEntry(e) {
+            e.preventDefault();
+
+            const entry = {
+                id: Date.now(),
+                medication: document.getElementById('medName').value.trim(),
+                date: document.getElementById('logDate').value,
+                time: document.getElementById('logTime').value,
+                dosage: document.getElementById('dosage').value.trim(),
+                notes: document.getElementById('notes').value.trim(),
+                timestamp: new Date().toISOString()
+            };
+
+            entries.unshift(entry);
+            localStorage.setItem('medEntries', JSON.stringify(entries));
+            
+            document.getElementById('logForm').reset();
+            document.getElementById('logDate').valueAsDate = new Date();
+            
+            // Show success message
+            const msg = document.getElementById('successMessage');
+            msg.style.display = 'block';
+            setTimeout(() => msg.style.display = 'none', 3000);
+
+            updateMedicationList();
+            updateStats();
+            renderHistory();
+        }
+
+        function addReference(e) {
+            e.preventDefault();
+
+            const ref = {
+                id: Date.now(),
+                name: document.getElementById('refMedName').value.trim(),
+                purpose: document.getElementById('refPurpose').value.trim(),
+                dosage: document.getElementById('refDosage').value.trim(),
+                frequency: document.getElementById('refFrequency').value.trim()
+            };
+
+            references.unshift(ref);
+            localStorage.setItem('medReferences', JSON.stringify(references));
+            
+            document.getElementById('refForm').reset();
+            updateMedicationList();
+            renderReferences();
+        }
+
+        function deleteEntry(id) {
+            if (confirm('Delete this entry?')) {
+                entries = entries.filter(e => e.id !== id);
+                localStorage.setItem('medEntries', JSON.stringify(entries));
+                updateStats();
+                renderHistory();
+            }
+        }
+
+        function deleteReference(id) {
+            if (confirm('Delete this medication from reference?')) {
+                references = references.filter(r => r.id !== id);
+                localStorage.setItem('medReferences', JSON.stringify(references));
+                renderReferences();
+                updateMedicationList();
+            }
+        }
+
+        function updateMedicationList() {
+            const medicationList = document.getElementById('medicationList');
+            medicationList.innerHTML = '';
+            const uniqueMeds = [...new Set([...entries.map(e => e.medication), ...references.map(r => r.name)])];
+            uniqueMeds.forEach(med => {
+                const option = document.createElement('option');
+                option.value = med;
+                medicationList.appendChild(option);
+            });
+        }
+
+        function updateStats() {
+            const today = new Date().toISOString().split('T')[0];
+            const todayCount = entries.filter(e => e.date === today).length;
+            document.getElementById('totalEntries').textContent = entries.length;
+            document.getElementById('todayEntries').textContent = todayCount;
+        }
+
+        function renderHistory() {
+            const list = document.getElementById('historyList');
+            const searchTerm = document.getElementById('searchBox').value.toLowerCase();
+            let filtered = entries;
+
+            // Date filter
+            if (currentDateFilter !== 'all') {
+                const today = new Date();
+                const cutoff = new Date();
+                if (currentDateFilter === 'today') cutoff.setDate(today.getDate());
+                else if (currentDateFilter === 'week') cutoff.setDate(today.getDate() - 7);
+                else if (currentDateFilter === 'month') cutoff.setDate(today.getDate() - 30);
+                
+                filtered = filtered.filter(e => new Date(e.date) >= cutoff);
+            }
+
+            // Search filter
+            if (searchTerm) {
+                filtered = filtered.filter(e => e.medication.toLowerCase().includes(searchTerm));
+            }
+
+            if (filtered.length === 0) {
+                list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div><p>No entries found</p></div>';
+                return;
+            }
+
+            list.innerHTML = filtered.map(entry => {
+                const dateObj = new Date(entry.date);
+                const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                return `
+                    <div class="entry-card">
+                        <div class="entry-header">
+                            <div>
+                                <div class="medication-name">${escapeHtml(entry.medication)}</div>
+                                <div class="entry-date">${dateStr}</div>
+                            </div>
+                            <div class="dosage-badge">${escapeHtml(entry.dosage)}</div>
+                        </div>
+                        <div class="entry-time">⏰ ${entry.time}</div>
+                        ${entry.notes ? `<div class="entry-notes">${escapeHtml(entry.notes)}</div>` : ''}
+                        <div class="entry-actions">
+                            <button class="btn-delete" onclick="deleteEntry(${entry.id})">Delete</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderReferences() {
+            const list = document.getElementById('referenceList');
+            const empty = document.getElementById('emptyReference');
+
+            if (references.length === 0) {
+                list.innerHTML = '';
+                empty.style.display = 'block';
+                return;
+            }
+
+            empty.style.display = 'none';
+            list.innerHTML = references.map(ref => `
+                <div class="med-ref-card">
+                    <div class="med-ref-name">${escapeHtml(ref.name)}</div>
+                    ${ref.purpose ? `<div class="med-ref-item"><span class="med-ref-label">Purpose:</span> ${escapeHtml(ref.purpose)}</div>` : ''}
+                    ${ref.dosage ? `<div class="med-ref-item"><span class="med-ref-label">Dosage:</span> ${escapeHtml(ref.dosage)}</div>` : ''}
+                    ${ref.frequency ? `<div class="med-ref-item"><span class="med-ref-label">Frequency:</span> ${escapeHtml(ref.frequency)}</div>` : ''}
+                    <button class="btn-delete" style="margin-top: 12px;" onclick="deleteReference(${ref.id})">Remove</button>
+                </div>
+            `).join('');
+        }
+
+        function filterHistory() {
+            renderHistory();
+        }
+
+        function filterByDate(filter) {
+            currentDateFilter = filter;
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            renderHistory();
+        }
+
+        function escapeHtml(text) {
+            const map = {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'};
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        function clearAllEntries() {
+            if (confirm('⚠️ Delete all medication entries? This cannot be undone.\n\nYour medication reference will be kept.')) {
+                if (confirm('Are you absolutely sure? This will delete ' + entries.length + ' entries.')) {
+                    entries = [];
+                    localStorage.setItem('medEntries', JSON.stringify(entries));
+                    updateStats();
+                    renderHistory();
+                    alert('✓ All medication entries have been deleted.');
+                }
+            }
+        }
+
+        function clearAllReferences() {
+            if (confirm('⚠️ Delete all medications from your reference? This cannot be undone.')) {
+                if (confirm('Are you absolutely sure? This will delete ' + references.length + ' medications.')) {
+                    references = [];
+                    localStorage.setItem('medReferences', JSON.stringify(references));
+                    updateMedicationList();
+                    renderReferences();
+                    alert('✓ All medications have been deleted from your reference.');
+                }
+            }
+        }
+
+        function clearAllData() {
+            if (confirm('⚠️ FACTORY RESET: Delete ALL data? This cannot be undone.\n\nThis includes:\n- All medication entries\n- All medication references\n\nThe app will start completely fresh.')) {
+                if (confirm('⚠️ This is your LAST WARNING. Delete everything?')) {
+                    entries = [];
+                    references = [];
+                    localStorage.setItem('medEntries', JSON.stringify(entries));
+                    localStorage.setItem('medReferences', JSON.stringify(references));
+                    updateStats();
+                    updateMedicationList();
+                    renderHistory();
+                    renderReferences();
+                    alert('✓ All data has been cleared. The app is now factory reset.');
+                }
+            }
+        }
+
+        function exportToExcel() {
+            // Create a simple CSV/Excel format export
+            try {
+                const data = {
+                    exportDate: new Date().toISOString(),
+                    entries: entries,
+                    references: references
+                };
+
+                // For simplicity, we'll export as JSON first, then create a downloadable Excel-like file
+                // This creates both JSON backup and a formatted Excel file
+                
+                // Create JSON backup
+                const jsonStr = JSON.stringify(data, null, 2);
+                const jsonBlob = new Blob([jsonStr], { type: 'application/json' });
+                const jsonUrl = URL.createObjectURL(jsonBlob);
+                const jsonLink = document.createElement('a');
+                jsonLink.href = jsonUrl;
+                jsonLink.download = `medication_tracker_backup_${new Date().toISOString().split('T')[0]}.json`;
+                
+                // Also create Excel-style CSV
+                let csvContent = 'Medication Tracker - Data Export\n';
+                csvContent += `Export Date: ${new Date().toLocaleString()}\n\n`;
+                
+                // Entries section
+                csvContent += 'MEDICATION LOG\n';
+                csvContent += 'Date,Time,Medication,Dosage,Notes\n';
+                entries.forEach(entry => {
+                    const notes = entry.notes ? `"${entry.notes.replace(/"/g, '""')}"` : '';
+                    csvContent += `${entry.date},${entry.time},"${entry.medication}","${entry.dosage}",${notes}\n`;
+                });
+                
+                csvContent += '\n\nMEDICATION REFERENCE\n';
+                csvContent += 'Name,Purpose,Dosage,Frequency\n';
+                references.forEach(ref => {
+                    csvContent += `"${ref.name}","${ref.purpose || ''}","${ref.dosage || ''}","${ref.frequency || ''}"\n`;
+                });
+                
+                // Summary statistics
+                const today = new Date().toISOString().split('T')[0];
+                const todayCount = entries.filter(e => e.date === today).length;
+                csvContent += '\n\nSUMMARY\n';
+                csvContent += `Total Entries,${entries.length}\n`;
+                csvContent += `Today's Entries,${todayCount}\n`;
+                csvContent += `Total Medications,${references.length}\n`;
+                
+                const csvBlob = new Blob([csvContent], { type: 'text/csv' });
+                const csvUrl = URL.createObjectURL(csvBlob);
+                const csvLink = document.createElement('a');
+                csvLink.href = csvUrl;
+                csvLink.download = `medication_tracker_${new Date().toISOString().split('T')[0]}.csv`;
+                
+                // Download both files - start with CSV (more universal)
+                csvLink.click();
+                
+                // Also save JSON for backup/import
+                setTimeout(() => {
+                    jsonLink.click();
+                }, 500);
+                
+                alert('✓ Data exported!\n\n• CSV file for viewing in Excel or spreadsheets\n• JSON backup for re-importing into the app');
+            } catch (error) {
+                alert('Error exporting data: ' + error.message);
+            }
+        }
+
+        function importFromFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const content = e.target.result;
+                    const data = JSON.parse(content);
+
+                    if (!data.entries || !data.references) {
+                        throw new Error('Invalid backup file format');
+                    }
+
+                    if (confirm(`This will import ${data.entries.length} entries and ${data.references.length} medications.\n\nCurrent data will be merged with imported data. Continue?`)) {
+                        // Merge data (don't overwrite, just add)
+                        entries = [...data.entries, ...entries];
+                        references = [...data.references, ...references];
+
+                        localStorage.setItem('medEntries', JSON.stringify(entries));
+                        localStorage.setItem('medReferences', JSON.stringify(references));
+
+                        updateMedicationList();
+                        updateStats();
+                        renderHistory();
+                        renderReferences();
+
+                        alert(`✓ Data imported successfully!\n\n• ${data.entries.length} entries imported\n• ${data.references.length} medications imported`);
+                    }
+                } catch (error) {
+                    alert('Error importing file: ' + error.message + '\n\nMake sure you selected a valid medication tracker backup file.');
+                }
+            };
+            reader.readAsText(file);
+            
+            // Reset file input
+            event.target.value = '';
+        }
+
+        function updateReminders() {
+            const banner = document.getElementById('reminderBanner');
+            const today = new Date().toISOString().split('T')[0];
+            const now = new Date();
+            const currentHour = now.getHours();
+            const currentMinutes = now.getMinutes();
+            const currentTime = currentHour + currentMinutes / 60;
+
+            const dueReminders = [];
+            const overdueReminders = [];
+
+            references.forEach(ref => {
+                const todayEntries = entries.filter(e => e.medication === ref.name && e.date === today);
+                const frequency = ref.frequency.toLowerCase();
+
+                // Check if this is an interval-based frequency (e.g., "6h pain", "every 6 hours", "q6h")
+                const intervalMatch = frequency.match(/(\d+)\s*h(?:our)?s?|every\s+(\d+)\s*h(?:our)?s?|q(\d+)h/i);
+                
+                if (intervalMatch) {
+                    // Interval-based medication (e.g., pain meds)
+                    const interval = parseInt(intervalMatch[1] || intervalMatch[2] || intervalMatch[3]);
+                    
+                    if (todayEntries.length === 0) {
+                        // No doses taken today, it's due now
+                        dueReminders.push(ref);
+                    } else {
+                        // Get the last dose time
+                        const lastEntry = todayEntries[todayEntries.length - 1];
+                        const [lastHour, lastMinute] = lastEntry.time.split(':').map(Number);
+                        const lastDoseTime = lastHour + lastMinute / 60;
+                        const timeSinceLastDose = currentTime - lastDoseTime;
+                        
+                        if (timeSinceLastDose >= interval) {
+                            // It's been at least 'interval' hours since last dose
+                            if (timeSinceLastDose >= interval + 1) {
+                                // More than 1 hour overdue
+                                overdueReminders.push(ref);
+                            } else {
+                                // Ready to take
+                                dueReminders.push(ref);
+                            }
+                        }
+                        // If not enough time has passed, don't show reminder
+                    }
+                } else {
+                    // Fixed schedule medications (original logic)
+                    let expectedDoses = 1;
+                    let doseTimes = [9]; // Default: 9 AM
+
+                    // Parse frequency and determine expected dose times
+                    if (frequency.includes('2x') || frequency.includes('twice')) {
+                        expectedDoses = 2;
+                        doseTimes = [9, 21]; // 9 AM and 9 PM
+                    } else if (frequency.includes('3x') || frequency.includes('three times')) {
+                        expectedDoses = 3;
+                        doseTimes = [9, 14, 21]; // 9 AM, 2 PM, 9 PM
+                    } else if (frequency.includes('4x') || frequency.includes('four times')) {
+                        expectedDoses = 4;
+                        doseTimes = [8, 12, 16, 20]; // 8 AM, 12 PM, 4 PM, 8 PM
+                    } else if (frequency.includes('once') || frequency.includes('1x') || frequency.includes('daily')) {
+                        expectedDoses = 1;
+                        doseTimes = [9]; // 9 AM
+                    }
+
+                    // Check how many doses have been taken today
+                    const dosesTaken = todayEntries.length;
+
+                    // Check if there's a pending dose
+                    if (dosesTaken < expectedDoses) {
+                        // Find which dose slot we're in or coming up to
+                        for (let i = 0; i < doseTimes.length; i++) {
+                            const doseTime = doseTimes[i];
+                            const doseWindow = doseTime - 3;
+                            
+                            if (currentTime >= doseWindow && dosesTaken === i) {
+                                // Check if overdue (past the dose time)
+                                if (currentTime >= doseTime + 3) {
+                                    overdueReminders.push(ref);
+                                } else {
+                                    dueReminders.push(ref);
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Render banner
+            if (overdueReminders.length > 0) {
+                banner.innerHTML = `
+                    <div class="reminder-banner alert">
+                        <h3>⚠️ Overdue Medications!</h3>
+                        <div class="reminder-items">
+                            ${overdueReminders.map(ref => `
+                                <div class="reminder-item">
+                                    <span class="reminder-item-name">${escapeHtml(ref.name)}</span>
+                                    <span class="reminder-item-time">${escapeHtml(ref.dosage || 'Dose')}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <p style="font-size: 12px; margin-top: 8px; opacity: 0.9;">These medications are overdue. Please take them now.</p>
+                    </div>
+                `;
+            } else if (dueReminders.length > 0) {
+                banner.innerHTML = `
+                    <div class="reminder-banner ready">
+                        <h3>✓ Ready to Take Now</h3>
+                        <div class="reminder-items">
+                            ${dueReminders.map(ref => `
+                                <div class="reminder-item">
+                                    <span class="reminder-item-name">${escapeHtml(ref.name)}</span>
+                                    <span class="reminder-item-time">${escapeHtml(ref.dosage || 'Dose')}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <p style="font-size: 12px; margin-top: 8px; opacity: 0.9;">Tap Log tab to record these medications.</p>
+                    </div>
+                `;
+            } else {
+                banner.innerHTML = '';
+            }
+        }
+    </script>
+</body>
+</html>
